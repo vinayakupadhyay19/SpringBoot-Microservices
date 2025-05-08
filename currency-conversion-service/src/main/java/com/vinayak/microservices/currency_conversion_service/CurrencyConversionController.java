@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CurrencyEditor;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,8 @@ public class CurrencyConversionController {
 	
 	@Autowired
 	private CurrencyExchangeProxy proxy;
+	@Autowired
+	private Environment environment;
 
 	@GetMapping("currency-conversion/from/{from}/to/{to}/quantity/{quantity}")
 	public CurrencyConversion calculateCurrencyConversion(
@@ -30,7 +33,7 @@ public class CurrencyConversionController {
 			ResponseEntity<CurrencyConversion> reponseEntity = new RestTemplate().getForEntity("http://localhost:8000/currency-exchange/from/{from}/to/{to}",CurrencyConversion.class,
 					uriVariables);
 			CurrencyConversion currencyConversion = reponseEntity.getBody();
-			return new CurrencyConversion(currencyConversion.getId(),from,to,quantity,currencyConversion.getConversionMultiple(),quantity.multiply(currencyConversion.getConversionMultiple()),"");
+			return new CurrencyConversion(currencyConversion.getId(),from,to,quantity,currencyConversion.getConversionMultiple(),quantity.multiply(currencyConversion.getConversionMultiple()),"resttemplate "+environment.getProperty("local.server.port"));
 	}
 	
 	@GetMapping("currency-conversion-feign/from/{from}/to/{to}/quantity/{quantity}")
@@ -41,6 +44,6 @@ public class CurrencyConversionController {
 			) {
 		
 			CurrencyConversion currencyConversion = proxy.retrieveExchangeValue(from, to);
-			return new CurrencyConversion(currencyConversion.getId(),from,to,quantity,currencyConversion.getConversionMultiple(),quantity.multiply(currencyConversion.getConversionMultiple()),currencyConversion.getEnvironment());
+			return new CurrencyConversion(currencyConversion.getId(),from,to,quantity,currencyConversion.getConversionMultiple(),quantity.multiply(currencyConversion.getConversionMultiple()),"feign "+environment.getProperty("local.server.port"));
 	}
 }
